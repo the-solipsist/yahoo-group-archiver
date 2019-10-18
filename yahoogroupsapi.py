@@ -46,8 +46,16 @@ class YahooGroupsAPI:
         return len(self.s.cookies) > 2
 
     def get_file(self, url):
-        r = self.s.get(url)
-        r.raise_for_status()
+        retries = 5
+        while True:
+            r = self.s.get(url)
+            if r.status_code == 400 and retries > 0:
+                print "[Got 400 error for %s, will sleep and retry %d times]" % (url, retries)
+                retries -= 1
+                time.sleep(5)
+                continue
+            r.raise_for_status()
+            break
         return r.content
 
     def download_file(self, url, f, **args):
